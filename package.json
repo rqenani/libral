@@ -1,0 +1,13 @@
+{
+  "name": "bibloteka-sqlite-root",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "postinstall": "npm --prefix server install",
+    "start": "node server/server.js"
+  }
+}

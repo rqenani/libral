@@ -1,0 +1,15 @@
+services:
+- type: web
+  name: bibloteka-sqlite
+  env: node
+  plan: free
+  buildCommand: npm install
+  startCommand: npm start
+  envVars:
+    - key: DATA_DIR
+      value: /var/data
+  disk:
+    name: data
+    mountPath: /var/data
+    sizeGB: 1
+  healthCheckPath: /api/diag

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bibloteka - Tregu i Librave</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'%3E%3C/rect%3E%3Cpath d='M30 20 H70 V80 H30 Z' fill='%23ffffff'%3E%3C/path%3E%3Cpath d='M40 30 H60' stroke='%232563eb' stroke-width='4'%3E%3C/path%3E%3Cpath d='M40 45 H60' stroke='%232563eb' stroke-width='4'%3E%3C/path%3E%3Cpath d='M40 60 H50' stroke='%232563eb' stroke-width='4'%3E%3C/path%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+
+  <!-- Google AdSense - vendos domain-in të aprovuar -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7646609826897119" crossorigin="anonymous"></script>
+  -->
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#f8fafc; }
+    .ticker-wrap{ width:100%; overflow:hidden; background:#1e293b; padding:10px 0; color:white; }
+    .ticker-move{ display:flex; flex-wrap:nowrap; align-items:center; gap:2rem; white-space:nowrap; animation:ticker 30s linear infinite; will-change:transform; }
+    @keyframes ticker { 0%{ transform: translateX(100%);} 100%{ transform: translateX(-100%);} }
+    .ticker-item{ display:inline-flex; align-items:center; }
+    .modal-backdrop{ transition: opacity .3s ease; }
+    .modal-content{ transition: transform .3s ease; }
+    .book-card:hover .overlay{ opacity:1; }
+    .book-card .overlay{ transition: opacity .3s ease; }
+    .loader{ border-top-color:#2563eb; animation: spin 1s linear infinite;}
+    @keyframes spin { to { transform: rotate(360deg);} }
+  </style>
+</head>
+<body class="text-gray-900">
+  <!-- === HEADER === -->
+  <header class="bg-white shadow-md sticky top-0 z-40">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+      <a href="#" class="flex items-center gap-3" onclick="window.location.reload()">
+        <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="20" fill="#2563eb"></rect><path d="M30 20 H70 V80 H30 Z" fill="#ffffff"></path><path d="M40 30 H60" stroke="#2563eb" stroke-width="4"></path><path d="M40 45 H60" stroke="#2563eb" stroke-width="4"></path><path d="M40 60 H50" stroke="#2563eb" stroke-width="4"></path></svg>
+        <span class="text-2xl font-bold text-gray-800">Bibloteka</span>
+      </a>
+      <div class="flex items-center space-x-4">
+        <button id="addListingBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm">
+          <i class="fas fa-plus-circle mr-2"></i>Shto Njoftim
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- === TICKER === -->
+  <div class="ticker-wrap">
+    <div class="ticker-move" id="breakingNewsTicker">
+      <div class="ticker-item font-semibold px-8">Mirësevini në Bibloteka! Platforma juaj për librat...</div>
+    </div>
+  </div>
+
+  <!-- === MAIN === -->
+  <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Reklamë horizontale (vendose kur të aprovohet domain-i) -->
+    <!--
+    <ins class="adsbygoogle"
+        style="display:inline-block;width:728px;height:90px"
+        data-ad-client="ca-pub-7646609826897119"
+        data-ad-slot="2802675506"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
+
+    <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+      <h2 class="text-2xl font-bold mb-4 text-center">Gjej librin tënd ose listo një për shitje</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+        <div class="md:col-span-2">
+          <div class="relative flex items-center">
+            <i class="fas fa-search absolute left-3 text-gray-400"></i>
+            <input type="text" id="searchInput" placeholder="Kërko sipas titullit, autorit..." class="w-full p-3 pl-10 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <button id="mainSearchBtn" class="bg-blue-600 text-white px-5 py-3 rounded-r-lg font-semibold hover:bg-blue-700 transition">Kërko</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="onlyStockToggle" type="checkbox" class="w-5 h-5">
+          <label for="onlyStockToggle" class="text-sm">Vetëm me gjendje</label>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+    <div id="noResults" class="hidden text-center py-16">
+      <i class="fas fa-book-dead text-6xl text-gray-400 mb-4"></i>
+      <h2 class="text-2xl font-semibold text-gray-600">Nuk u gjet asnjë rezultat</h2>
+      <p class="text-gray-500 mt-2">Provoni një term tjetër kërkimi ose hiqni filtrin.</p>
+    </div>
+
+    <!-- Reklama fluid + autorelaxed (opsionale) -->
+    <!--
+    <ins class="adsbygoogle" style="display:block" data-ad-format="fluid"
+      data-ad-layout-key="-6t+ed+2i-1n-4w" data-ad-client="ca-pub-7646609826897119"
+      data-ad-slot="3924185480"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+    <ins class="adsbygoogle" style="display:block" data-ad-format="autorelaxed"
+      data-ad-client="ca-pub-7646609826897119" data-ad-slot="6550348828"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+    <ins class="adsbygoogle" style="display:block; text-align:center;"
+      data-ad-layout="in-article" data-ad-format="fluid"
+      data-ad-client="ca-pub-7646609826897119" data-ad-slot="3099007214"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    -->
+  </main>
+
+  <!-- === MODALS (search, details, manual add) === -->
+  <div id="searchBookModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-backdrop">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 modal-content transform scale-95">
+      <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Shto Njoftim (Hapi 1/2)</h2><button id="closeSearchBookModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+      <p class="text-gray-600 mb-4">Kërkoni librin që dëshironi të listoni (OpenLibrary / Google Books).</p>
+      <div class="relative mb-4"><input type="text" id="apiSearchInput" placeholder="Titull ose autor..." class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i></div>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <button id="apiSearchBtnOL" class="bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 transition">Kërko OpenLibrary</button>
+        <button id="apiSearchBtnGB" class="bg-emerald-600 text-white p-2 rounded-lg font-semibold hover:bg-emerald-700 transition">Kërko Google Books</button>
+      </div>
+      <div id="apiSearchResults" class="max-h-64 overflow-y-auto space-y-2"></div>
+      <div id="apiLoader" class="hidden text-center p-4"><div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mx-auto"></div><p class="mt-2 text-gray-500">Duke kërkuar...</p></div>
+      <div class="text-center mt-4 pt-4 border-t"><p class="text-gray-500 mb-2">Nuk e gjeni librin?</p><button id="openManualAddBtn" class="text-blue-600 font-semibold hover:underline">Shtojeni Manualisht</button></div>
+    </div>
+  </div>
+
+  <div id="listingDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-backdrop">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 modal-content transform scale-95">
+      <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Detajet e Njoftimit (Hapi 2/2)</h2><button id="closeListingDetailsModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+      <form id="listingForm" class="space-y-4">
+        <div class="text-center">
+          <img id="listingBookCover" src="https://placehold.co/128x192/e2e8f0/a0aec0?text=Kopertina" alt="Kopertina" class="w-32 h-48 object-cover mx-auto rounded-md shadow-lg">
+          <h3 id="listingBookTitle" class="text-xl font-bold mt-2">Titulli i Librit</h3>
+          <p id="listingBookAuthor" class="text-gray-500">Autori</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="listingType" class="block text-sm font-medium text-gray-700 mb-1">Tipi i Njoftimit</label>
+            <select id="listingType" required class="w-full p-2 border border-gray-300 rounded-lg">
+              <option value="sell">Shitje</option>
+              <option value="rent">Qera</option>
+              <option value="digital">Kopje Dixhitale</option>
+              <option value="buy">Kërkesë Blerjeje</option>
+            </select>
+          </div>
+          <div id="price-container">
+            <label for="listingPrice" class="block text-sm font-medium text-gray-700 mb-1">Çmimi (Lekë)</label>
+            <input type="number" id="listingPrice" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="p.sh. 1500">
+          </div>
+        </div>
+        <div id="condition-container">
+          <label for="listingCondition" class="block text-sm font-medium text-gray-700 mb-1">Gjendja e Librit</label>
+          <select id="listingCondition" class="w-full p-2 border border-gray-300 rounded-lg">
+            <option value="new">Si i ri</option>
+            <option value="good">I mirëmbajtur</option>
+            <option value="used">Me shenja përdorimi</option>
+          </select>
+        </div>
+        <h4 class="font-semibold text-gray-800 border-t pt-4">Informacion Kontakti</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Emri & Mbiemri</label><input type="text" id="sellerName" required class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Filan Fisteku"></div>
+          <div><label class="block text-sm font-medium text-gray-700 mb-1">Nr. Celularit</label><input type="tel" id="sellerPhone" required class="w-full p-2 border border-gray-300 rounded-lg" placeholder="0691234567"></div>
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="sellerEmail" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="filan@email.com"></div>
+        <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition">Publiko Njoftimin</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="manualAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-backdrop">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 modal-content transform scale-95">
+      <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Shto Libër Manualisht</h2><button id="closeManualAddModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+      <form id="manualAddForm" class="space-y-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Titulli i Librit</label><input type="text" id="manualTitle" required class="w-full p-2 border border-gray-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Autori</label><input type="text" id="manualAuthor" required class="w-full p-2 border border-gray-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">URL e Kopertinës</label><input type="url" id="manualCoverUrl" required class="w-full p-2 border border-gray-300 rounded-lg" placeholder="https://..."><p class="text-xs text-gray-500 mt-1">Gjeni një imazh online dhe vendosni linkun këtu.</p></div>
+        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition">Vazhdo tek Detajet</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="viewListingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden modal-backdrop">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 modal-content transform scale-95 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 sticky top-0 bg-white py-2 -mt-6 -mx-6 px-6 border-b"><h2 class="text-2xl font-bold">Detajet e Librit</h2><button id="closeViewListingModal" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button></div>
+      <div id="viewListingContent"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
